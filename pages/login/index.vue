@@ -38,19 +38,20 @@
 </template>
 
 <script>
-import { login, register } from "@/api/user";
+import { login, register } from "@/api/user"
+import { mapMutations } from 'vuex'
+const Cookie = process.client ? require('js-cookie') : undefined
 
 export default {
 	name: "LoginIndex",
+	middleware: 'notauthenticated',
 	data () {
 		return {
 			user: {
 				email: '',
 				password: ''
 			},
-			errors: {
-
-			}
+			errors: {}
 		}
 	},
 	computed: {
@@ -59,16 +60,18 @@ export default {
 		}
 	},
 	methods: {
+		...mapMutations(['setUser']),
 		async onSubmit () {
 			try {
-				const { data } = this.islogin
+				const { data } = !this.islogin
 				? await login({
 						user: this.user
 					})
 				: await register({
 						user: this.user
 					})
-
+				this.setUser(data.user)
+				Cookie.set('user', data.user)
 				this.$router.push('/')
 			} catch (err) {
 				this.errors = err.response.data.errors
