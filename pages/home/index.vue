@@ -15,7 +15,55 @@
 					<div class="feed-toggle">
 						<ul class="nav nav-pills outline-active">
 							<li class="nav-item">
-								<a class="nav-link active" href="">Global Feed</a>
+								<nuxt-link
+									class="nav-link"
+									:class="{
+										active: tab === 'your_feed'
+									}"
+									:to="{
+										name: 'home',
+										query: {
+											tab: 'your_feed'
+										}
+									}"
+									exact
+								>
+									Your Feed
+								</nuxt-link>
+							</li>
+							<li class="nav-item">
+								<nuxt-link
+									class="nav-link"
+									:class="{
+										active: tab === 'global_feed'
+									}"
+									:to="{
+										name: 'home',
+										query: {
+											tab: 'global_feed'
+										}
+									}"
+									exact
+								>
+									Global Feed
+								</nuxt-link>
+							</li>
+							<li class="nav-item" v-if="tag">
+								<nuxt-link
+									class="nav-link active"
+									:class="{
+										active: tab === 'tag'
+									}"
+									:to="{
+										name: 'home',
+										query: {
+											tab: 'tag'
+										}
+									}"
+									exact
+								>
+									# {{ tag }}
+								</nuxt-link>
 							</li>
 						</ul>
 					</div>
@@ -64,6 +112,31 @@
 						</nuxt-link>
 					</div>
 
+					<nav>
+						<ul class="pagination">
+							<li
+								class="page-item"
+								:class="{
+									active: item === page
+								}"
+								v-for="item in totalPage"
+								:key="item">
+								<nuxt-link
+									class="page-link"
+									:to="{
+										name: 'home',
+										query: {
+											page: item,
+											tag,
+											tab
+										}
+									}"
+								>
+									{{ item }}
+								</nuxt-link>
+							</li>
+						</ul>
+					</nav>
 				</div>
 
 				<div class="col-md-3">
@@ -71,14 +144,19 @@
 						<p>Popular Tags</p>
 
 						<div class="tag-list">
-							<a href="" class="tag-pill tag-default">programming</a>
-							<a href="" class="tag-pill tag-default">javascript</a>
-							<a href="" class="tag-pill tag-default">emberjs</a>
-							<a href="" class="tag-pill tag-default">angularjs</a>
-							<a href="" class="tag-pill tag-default">react</a>
-							<a href="" class="tag-pill tag-default">mean</a>
-							<a href="" class="tag-pill tag-default">node</a>
-							<a href="" class="tag-pill tag-default">rails</a>
+							<nuxt-link
+								v-for="(tag, index) in tags"
+								:key="index" href=""
+								:to="{
+									name: 'home',
+									query: {
+										tag,
+										tab: 'tag'
+									}
+								}"
+								class="tag-pill tag-default">
+								{{ tag }}
+							</nuxt-link>
 						</div>
 					</div>
 				</div>
@@ -91,14 +169,39 @@
 
 <script>
 import { getArticles } from "@/api/article"
+import { getTags } from "@/api/tag"
 
 export default {
   name: "HomeIndex",
-	async asyncData () {
-  	const { data } = await getArticles()
+	watchQuery: ['page', 'tag'],
+	async asyncData ({ query }) {
+  	const page = Number.parseInt(query.page || 1)
+		const tag = query.tag
+  	const limit = 20
+
+		const [articlesData, tagsData] = await Promise.all([
+			getArticles({
+				limit,
+				offset: (page - 1) * limit,
+				tag
+			}),
+			getTags()
+		])
+		const { articles, articlesCount } = articlesData.data
+		const { tags } = tagsData.data
 		return {
-  		articles: data.articles,
-			articlesCount: data.articlesCount
+  		articles,
+			articlesCount,
+			limit,
+			page,
+			tags,
+			tag,
+			tab: query.tab || 'global_feed'
+		}
+	},
+	computed: {
+  	totalPage () {
+  		return Math.ceil(this.articlesCount / this.limit)
 		}
 	}
 };
