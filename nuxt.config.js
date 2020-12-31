@@ -1,4 +1,5 @@
 export default {
+  plugins: ['~/plugins/request.js', '~/plugins/day.js'],
   router: {
     linkActiveClass: 'active',
     extendRoutes (routes, resolve) {

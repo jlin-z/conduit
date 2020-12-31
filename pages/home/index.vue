@@ -14,7 +14,7 @@
 				<div class="col-md-9">
 					<div class="feed-toggle">
 						<ul class="nav nav-pills outline-active">
-							<li class="nav-item">
+							<li v-if="user" class="nav-item">
 								<nuxt-link
 									class="nav-link"
 									:class="{
@@ -91,9 +91,14 @@
 								>
 									{{ article.author.username }}
 								</nuxt-link>
-								<span class="date">{{ article.createdAt }}</span>
+								<span class="date">{{ article.createdAt | date('MMM DD, YYYY') }}</span>
 							</div>
-							<button class="btn btn-outline-primary btn-sm pull-xs-right" :class="{ active: article.favorited }">
+							<button
+								class="btn btn-outline-primary btn-sm pull-xs-right"
+								:class="{ active: article.favorited }"
+								@click="onFavorite(article)"
+								:disabled="article.favoritedDisabled"
+							>
 								<i class="ion-heart"></i> {{ article.favoritesCount }}
 							</button>
 						</div>
@@ -168,19 +173,22 @@
 </template>
 
 <script>
-import { getArticles } from "@/api/article"
+import { getArticles, getFeedArticles, addFavorite, deleteFavorite } from "@/api/article"
 import { getTags } from "@/api/tag"
+import { mapState } from "vuex"
 
 export default {
   name: "HomeIndex",
-	watchQuery: ['page', 'tag'],
-	async asyncData ({ query }) {
+	watchQuery: ['page', 'tag', 'tab'],
+	async asyncData ({ query, store }) {
   	const page = Number.parseInt(query.page || 1)
 		const tag = query.tag
   	const limit = 20
+		const tab = query.tab || 'global_feed'
+		const loadArticles = store.state.user && tab === 'your_feed' ? getFeedArticles : getArticles
 
 		const [articlesData, tagsData] = await Promise.all([
-			getArticles({
+			loadArticles({
 				limit,
 				offset: (page - 1) * limit,
 				tag
@@ -188,6 +196,7 @@ export default {
 			getTags()
 		])
 		const { articles, articlesCount } = articlesData.data
+		articles.forEach(article => article.favoritedDisabled = false)
 		const { tags } = tagsData.data
 		return {
   		articles,
@@ -196,12 +205,31 @@ export default {
 			page,
 			tags,
 			tag,
-			tab: query.tab || 'global_feed'
+			tab
 		}
 	},
 	computed: {
+  	...mapState(['user']),
   	totalPage () {
   		return Math.ceil(this.articlesCount / this.limit)
+		}
+	},
+	methods: {
+		async onFavorite (article) {
+			if (!this.user) {
+				return false
+			}
+			article.favoritedDisabled = true
+			if (article.favorited) {
+				await deleteFavorite(article.slug)
+				article.favorited = false
+				article.favoritesCount += -1
+			} else {
+				await addFavorite(article.slug)
+				article.favorited = true
+				article.favoritesCount += 1
+			}
+			article.favoritedDisabled = false
 		}
 	}
 };
