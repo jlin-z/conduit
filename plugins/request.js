@@ -5,9 +5,6 @@ export const request = axios.create({
 })
 
 // 请求拦截器
-
-// 响应拦截器
-
 export default function ({ store }) {
   request.interceptors.request.use(function (config) {
     // 设置请求 token
@@ -19,3 +16,5 @@ export default function ({ store }) {
     return Promise.reject(error);
   });
 }
+
+// 响应拦截器

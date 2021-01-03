@@ -43,3 +43,18 @@ export const getComments = (slug) => {
     method: 'GET'
   })
 }
+
+export const addComment = (slug, data) => {
+  return request({
+    url: `/api/articles/${slug}/comments`,
+    method: 'POST',
+    data
+  })
+}
+
+export const deleteComment = (slug, id) => {
+  return request({
+    url: `/api/articles/${slug}/comments/${id}`,
+    method: 'DELETE'
+  })
+}

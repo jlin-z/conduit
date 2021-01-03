@@ -68,54 +68,7 @@
 						</ul>
 					</div>
 
-					<div v-for="article in articles" class="article-preview">
-						<div class="article-meta">
-							<nuxt-link
-								:to="{
-									name: 'profile',
-									params: {
-										username: article.author.username
-									}
-								}"
-							>
-								<img :src="article.author.image" />
-							</nuxt-link>
-							<div class="info">
-								<nuxt-link
-									:to="{
-									name: 'profile',
-									params: {
-										username: article.author.username
-									}
-								}"
-								>
-									{{ article.author.username }}
-								</nuxt-link>
-								<span class="date">{{ article.createdAt | date('MMM DD, YYYY') }}</span>
-							</div>
-							<button
-								class="btn btn-outline-primary btn-sm pull-xs-right"
-								:class="{ active: article.favorited }"
-								@click="onFavorite(article)"
-								:disabled="article.favoritedDisabled"
-							>
-								<i class="ion-heart"></i> {{ article.favoritesCount }}
-							</button>
-						</div>
-						<nuxt-link
-							class="preview-link"
-							:to="{
-								name: 'article',
-								params: {
-									slug: article.slug
-								}
-							}"
-						>
-							<h1>{{ article.title }}</h1>
-							<p>{{ article.description }}</p>
-							<span>Read more...</span>
-						</nuxt-link>
-					</div>
+					<article-preview v-for="article in articles" :key="article.slug" :article="article" />
 
 					<nav>
 						<ul class="pagination">
@@ -173,13 +126,17 @@
 </template>
 
 <script>
-import { getArticles, getFeedArticles, addFavorite, deleteFavorite } from "@/api/article"
+import { getArticles, getFeedArticles } from "@/api/article"
 import { getTags } from "@/api/tag"
 import { mapState } from "vuex"
+import ArticlePreview from '@/components/article-preview'
 
 export default {
   name: "HomeIndex",
 	watchQuery: ['page', 'tag', 'tab'],
+	components: {
+		ArticlePreview
+	},
 	async asyncData ({ query, store }) {
   	const page = Number.parseInt(query.page || 1)
 		const tag = query.tag
@@ -212,24 +169,6 @@ export default {
   	...mapState(['user']),
   	totalPage () {
   		return Math.ceil(this.articlesCount / this.limit)
-		}
-	},
-	methods: {
-		async onFavorite (article) {
-			if (!this.user) {
-				return false
-			}
-			article.favoritedDisabled = true
-			if (article.favorited) {
-				await deleteFavorite(article.slug)
-				article.favorited = false
-				article.favoritesCount += -1
-			} else {
-				await addFavorite(article.slug)
-				article.favorited = true
-				article.favoritesCount += 1
-			}
-			article.favoritedDisabled = false
 		}
 	}
 };

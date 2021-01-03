@@ -39,7 +39,7 @@
 </template>
 
 <script>
-import { getArticle } from "@/api/article";
+import { getArticle } from "@/api/article"
 import MarkDownIt from 'markdown-it'
 import ArticleMeta from './components/article-meta'
 import ArticleComment from './components/article-comment'
