@@ -68,6 +68,10 @@
 						</ul>
 					</div>
 
+					<div class="article-preview" v-if="!articles.length">
+						No articles are here... yet.
+					</div>
+
 					<article-preview v-for="article in articles" :key="article.slug" :article="article" />
 
 					<nav>

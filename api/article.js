@@ -58,3 +58,18 @@ export const deleteComment = (slug, id) => {
     method: 'DELETE'
   })
 }
+
+export const create = (data) => {
+  return request({
+    url: '/api/articles',
+    method: 'POST',
+    data
+  })
+}
+
+export const del = (slug) => {
+  return request({
+    url: `/api/articles/${slug}`,
+    method: 'DELETE'
+  })
+}
